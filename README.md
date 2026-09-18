@@ -1,1 +1,1 @@
-# Wina-Daily-planner
+# 💕 wina's Planner - Daily Organizer 💕
