@@ -195,21 +195,42 @@ new TaskManager();
 
 
 // ============================================================
-// 💰 MONEY MANAGER
+// 💰 BUDGET PLANNER (Money Manager v2)
 // ============================================================
 class MoneyManager {
     constructor() {
-        this.tx = JSON.parse(localStorage.getItem('wina_transactions')) || [];
+        this.tx      = JSON.parse(localStorage.getItem('wina_transactions')) || [];
+        this.budgets = JSON.parse(localStorage.getItem('wina_budgets')) || {
+            kuliah:  0,
+            makan:   0,
+            darurat: 0,
+            nabung:  0,
+            jajan:   0,
+        };
 
+        // Input transaction
         this.descEl   = document.getElementById('moneyDesc');
         this.amountEl = document.getElementById('moneyAmount');
         this.typeEl   = document.getElementById('moneyType');
+        this.catEl    = document.getElementById('moneyCategory');
         this.addBtn   = document.getElementById('addMoneyBtn');
         this.listEl   = document.getElementById('moneyList');
 
+        // Summary
         this.incomeEl  = document.getElementById('totalIncome');
         this.expenseEl = document.getElementById('totalExpense');
         this.balanceEl = document.getElementById('balance');
+
+        // Budget inputs
+        this.budgetInputs = {
+            kuliah:  document.getElementById('budgetKuliah'),
+            makan:   document.getElementById('budgetMakan'),
+            darurat: document.getElementById('budgetDarurat'),
+            nabung:  document.getElementById('budgetNabung'),
+            jajan:   document.getElementById('budgetJajan'),
+        };
+        this.saveBudgetBtn = document.getElementById('saveBudgetBtn');
+        this.resetBtn      = document.getElementById('resetDataBtn');
 
         if (!this.addBtn) return;
 
@@ -218,13 +239,59 @@ class MoneyManager {
             if (e.key === 'Enter') this.add();
         });
 
+        if (this.saveBudgetBtn) {
+            this.saveBudgetBtn.addEventListener('click', () => this.saveBudgets());
+        }
+        if (this.resetBtn) {
+            this.resetBtn.addEventListener('click', () => this.resetAll());
+        }
+
+        this.loadBudgetInputs();
         this.render();
+    }
+
+    loadBudgetInputs() {
+        Object.keys(this.budgetInputs).forEach((key) => {
+            const el = this.budgetInputs[key];
+            if (el && this.budgets[key]) el.value = this.budgets[key];
+        });
+    }
+
+    saveBudgets() {
+        const newBudgets = {};
+        Object.keys(this.budgetInputs).forEach((key) => {
+            const el  = this.budgetInputs[key];
+            const val = el ? parseFloat(el.value) || 0 : 0;
+            newBudgets[key] = val;
+        });
+        this.budgets = newBudgets;
+        localStorage.setItem('wina_budgets', JSON.stringify(this.budgets));
+        this.render();
+
+        const status = document.getElementById('budgetStatus');
+        if (status) {
+            status.textContent = '✅ Budget berhasil disimpan!';
+            status.className = 'status connected';
+            setTimeout(() => { status.textContent = ''; }, 2500);
+        }
+    }
+
+    resetAll() {
+        if (!confirm('Hapus SEMUA data transaksi & budget? Tindakan ini tidak bisa dibatalkan.')) return;
+        this.tx = [];
+        this.budgets = { kuliah: 0, makan: 0, darurat: 0, nabung: 0, jajan: 0 };
+        localStorage.removeItem('wina_transactions');
+        localStorage.removeItem('wina_budgets');
+        this.loadBudgetInputs();
+        this.render();
+        alert('Semua data berhasil dihapus.');
     }
 
     add() {
         const desc   = this.descEl.value.trim();
         const amount = parseFloat(this.amountEl.value);
         const type   = this.typeEl.value;
+        const cat    = this.catEl.value;
 
         if (!desc || isNaN(amount) || amount <= 0) {
             alert('Please enter a valid description and amount.');
@@ -236,6 +303,7 @@ class MoneyManager {
             desc,
             amount,
             type,
+            cat,
             date: new Date().toISOString(),
         });
 
@@ -257,7 +325,19 @@ class MoneyManager {
         localStorage.setItem('wina_transactions', JSON.stringify(this.tx));
     }
 
+    // Hitung total per kategori (hanya expense)
+    getSpentByCategory() {
+        const spent = { kuliah: 0, makan: 0, darurat: 0, nabung: 0, jajan: 0 };
+        this.tx
+            .filter((t) => t.type === 'expense')
+            .forEach((t) => {
+                if (spent[t.cat] !== undefined) spent[t.cat] += t.amount;
+            });
+        return spent;
+    }
+
     render() {
+        // ---- Total income / expense / balance ----
         const inc = this.tx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
         const exp = this.tx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
@@ -265,21 +345,76 @@ class MoneyManager {
         if (this.expenseEl) this.expenseEl.textContent = '$' + exp.toFixed(2);
         if (this.balanceEl) this.balanceEl.textContent = '$' + (inc - exp).toFixed(2);
 
+        // ---- Per-category progress ----
+        const spent = this.getSpentByCategory();
+        const cats  = ['kuliah', 'makan', 'darurat', 'nabung', 'jajan'];
+
+        cats.forEach((cat) => {
+            const budgetEl  = document.getElementById('budgetVal_'  + cat);
+            const spentEl   = document.getElementById('spentVal_'   + cat);
+            const remainEl  = document.getElementById('remainVal_'  + cat);
+            const barEl     = document.getElementById('bar_'        + cat);
+            const percentEl = document.getElementById('percent_'    + cat);
+
+            const budget  = this.budgets[cat] || 0;
+            const used    = spent[cat] || 0;
+            const remain  = budget - used;
+            const percent = budget === 0 ? 0 : Math.min(Math.round((used / budget) * 100), 100);
+
+            if (budgetEl)  budgetEl.textContent  = '$' + budget.toFixed(2);
+            if (spentEl)   spentEl.textContent   = '$' + used.toFixed(2);
+            if (remainEl) {
+                remainEl.textContent = '$' + remain.toFixed(2);
+                remainEl.style.color = remain < 0 ? '#dc2626' : '#059669';
+            }
+            if (barEl) {
+                barEl.style.width = percent + '%';
+                barEl.style.background =
+                    percent >= 100 ? '#dc2626'
+                  : percent >= 75  ? '#f59e0b'
+                  : '#10b981';
+            }
+            if (percentEl) percentEl.textContent = percent + '%';
+        });
+
+        // ---- Transaction list ----
         if (!this.listEl) return;
 
         if (this.tx.length === 0) {
-            this.listEl.innerHTML = '<li style="justify-content:center;color:#94a3b8;">No transactions yet.</li>';
+            this.listEl.innerHTML =
+                '<li style="justify-content:center;color:#94a3b8;">No transactions yet.</li>';
             return;
         }
 
+        const catLabels = {
+            kuliah:  '🎓 Kuliah',
+            makan:   '🍱 Makan',
+            darurat: '🚨 Darurat',
+            nabung:  '💰 Nabung',
+            jajan:   '🎮 Jajan',
+            other:   '📦 Lainnya',
+        };
+
         this.listEl.innerHTML = this.tx.map((t) => `
             <li class="${t.type}">
-                <span>${t.desc}</span>
-                <span>${t.type === 'income' ? '+' : '-'}$${t.amount.toFixed(2)}</span>
+                <span>
+                    <strong>${t.desc}</strong><br>
+                    <small style="color:#888;">${catLabels[t.cat] || '📦 Lainnya'}</small>
+                </span>
+                <span>
+                    ${t.type === 'income' ? '+' : '-'}$${t.amount.toFixed(2)}
+                    <button class="delete-btn" style="margin-left:8px;padding:4px 8px;font-size:0.8rem;"
+                        onclick="window._removeTx(${t.id})">✕</button>
+                </span>
             </li>`).join('');
     }
 }
-new MoneyManager();
+
+const moneyManagerInstance = new MoneyManager();
+window._removeTx = function (id) { moneyManagerInstance.remove(id); };
+
+      
+  
 
 
 // ============================================================
