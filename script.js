@@ -23,7 +23,7 @@ initDate();
 // ============================================================
 class TaskManager {
     constructor() {
-        this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        this.tasks = JSON.parse(localStorage.getItem('wina_tasks')) || [];
         this.currentFilter = 'all';
 
         this.inputEl     = document.getElementById('taskInput');
@@ -39,7 +39,6 @@ class TaskManager {
 
         this.filterBtns = document.querySelectorAll('.filter-btn');
 
-        // Guard: pastikan elemen utama ada sebelum pasang event
         if (!this.addBtn || !this.inputEl) return;
 
         this.addBtn.addEventListener('click', () => this.addTask());
@@ -95,7 +94,7 @@ class TaskManager {
     }
 
     save() {
-        localStorage.setItem('tasks', JSON.stringify(this.tasks));
+        localStorage.setItem('wina_tasks', JSON.stringify(this.tasks));
     }
 
     getFiltered() {
@@ -124,7 +123,6 @@ class TaskManager {
         const filtered = this.getFiltered();
         this.listEl.innerHTML = '';
 
-        // Toggle empty state using `.show` class (matches your CSS)
         if (this.emptyEl) {
             if (filtered.length === 0) {
                 this.emptyEl.classList.add('show');
@@ -137,12 +135,12 @@ class TaskManager {
             const item = document.createElement('div');
             item.className = 'task-item' + (task.done ? ' completed' : '');
 
-            // --- Custom checkbox (div, not input) ---
+            // Checkbox
             const checkbox = document.createElement('div');
             checkbox.className = 'task-checkbox' + (task.done ? ' checked' : '');
             checkbox.addEventListener('click', () => this.toggle(task.id));
 
-            // --- Content ---
+            // Content
             const content = document.createElement('div');
             content.className = 'task-content';
 
@@ -174,7 +172,7 @@ class TaskManager {
 
             content.appendChild(meta);
 
-            // --- Actions ---
+            // Actions
             const actions = document.createElement('div');
             actions.className = 'task-actions';
 
@@ -201,7 +199,7 @@ new TaskManager();
 // ============================================================
 class MoneyManager {
     constructor() {
-        this.tx = JSON.parse(localStorage.getItem('transactions')) || [];
+        this.tx = JSON.parse(localStorage.getItem('wina_transactions')) || [];
 
         this.descEl   = document.getElementById('moneyDesc');
         this.amountEl = document.getElementById('moneyAmount');
@@ -256,7 +254,7 @@ class MoneyManager {
     }
 
     save() {
-        localStorage.setItem('transactions', JSON.stringify(this.tx));
+        localStorage.setItem('wina_transactions', JSON.stringify(this.tx));
     }
 
     render() {
@@ -268,6 +266,11 @@ class MoneyManager {
         if (this.balanceEl) this.balanceEl.textContent = '$' + (inc - exp).toFixed(2);
 
         if (!this.listEl) return;
+
+        if (this.tx.length === 0) {
+            this.listEl.innerHTML = '<li style="justify-content:center;color:#94a3b8;">No transactions yet.</li>';
+            return;
+        }
 
         this.listEl.innerHTML = this.tx.map((t) => `
             <li class="${t.type}">
@@ -284,7 +287,7 @@ new MoneyManager();
 // ============================================================
 class ClassManager {
     constructor() {
-        this.classes = JSON.parse(localStorage.getItem('classes')) || [];
+        this.classes = JSON.parse(localStorage.getItem('wina_classes')) || [];
 
         this.nameEl     = document.getElementById('className');
         this.locationEl = document.getElementById('classLocation');
@@ -335,7 +338,7 @@ class ClassManager {
     }
 
     save() {
-        localStorage.setItem('classes', JSON.stringify(this.classes));
+        localStorage.setItem('wina_classes', JSON.stringify(this.classes));
     }
 
     render() {
@@ -370,8 +373,7 @@ window._removeClass = function (id) { classManagerInstance.remove(id); };
 
 
 // ============================================================
-// 📆 EXPORT CLASSES TO .ics (Google Calendar import)
-// No API needed — just generates a downloadable file
+// 📆 EXPORT CLASSES TO .ics
 // ============================================================
 const downloadBtn = document.getElementById('downloadIcsBtn');
 
@@ -380,105 +382,4 @@ if (downloadBtn) {
 }
 
 function downloadClassesAsIcs() {
-    const statusEl = document.getElementById('icsStatus');
-    const classes  = JSON.parse(localStorage.getItem('classes')) || [];
-
-    if (classes.length === 0) {
-        if (statusEl) {
-            statusEl.textContent = '⚠️ No classes added yet. Add a class first.';
-            statusEl.className = 'status error';
-        }
-        return;
-    }
-
-    // Find the next date matching a given weekday
-    const dayMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
-    function nextDateFor(dayCode) {
-        const today = new Date();
-        const diff  = (dayMap[dayCode] - today.getDay() + 7) % 7;
-        const d     = new Date(today);
-        d.setDate(today.getDate() + diff);
-        return d;
-    }
-
-    // Format a Date as YYYYMMDDTHHMMSS (local time, no Z)
-    function fmt(dt) {
-        const p = (n) => String(n).padStart(2, '0');
-        return (
-            dt.getFullYear() +
-            p(dt.getMonth() + 1) +
-            p(dt.getDate()) + 'T' +
-            p(dt.getHours()) +
-            p(dt.getMinutes()) +
-            p(dt.getSeconds())
-        );
-    }
-
-    // 1 year from now — recurring events end date
-    const until = new Date();
-    until.setFullYear(until.getFullYear() + 1);
-    const untilStr = fmt(until);
-
-    const lines = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Winas Planner//EN',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-    ];
-
-    classes.forEach((c) => {
-        const base = nextDateFor(c.day);
-        const [sh, sm] = c.start.split(':');
-        const [eh, em] = c.end.split(':');
-
-        const start = new Date(base);
-        start.setHours(+sh, +sm, 0, 0);
-
-        const end = new Date(base);
-        end.setHours(+eh, +em, 0, 0);
-
-        lines.push(
-            'BEGIN:VEVENT',
-            'UID:class-' + c.id + '@winas-planner',
-            'DTSTAMP:' + fmt(new Date()) + 'Z',
-            'DTSTART:' + fmt(start),
-            'DTEND:'   + fmt(end),
-            'RRULE:FREQ=WEEKLY;UNTIL=' + untilStr + 'Z;BYDAY=' + c.day,
-            'SUMMARY:' + escapeIcs(c.name),
-            c.location ? 'LOCATION:' + escapeIcs(c.location) : '',
-            'DESCRIPTION:Campus class added from Wina\'s Planner',
-            'END:VEVENT'
-        );
-    });
-
-    lines.push('END:VCALENDAR');
-
-    // Remove empty lines
-    const icsContent = lines.filter((l) => l !== '').join('\r\n');
-
-    // Trigger download
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = 'classes.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    if (statusEl) {
-        statusEl.textContent = '✅ File classes.ics downloaded! Now import it into Google Calendar.';
-        statusEl.className = 'status connected';
-    }
-}
-
-// Escape special characters for .ics format
-function escapeIcs(str) {
-    return String(str)
-        .replace(/\\/g, '\\\\')
-        .replace(/,/g,  '\\,')
-        .replace(/;/g,  '\\;')
-        .replace(/\n/g, '\\n');
-}
+    const statusEl
