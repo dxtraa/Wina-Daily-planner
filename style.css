@@ -506,3 +506,101 @@ button:active { transform: translateY(0); }
     .quick-add  { padding: 20px; }
     .new-card   { padding: 18px; }
 }
+
+/* ============================================================
+   💰 BUDGET PLANNER — EXTRA STYLES
+   ============================================================ */
+
+/* Budget setup grid */
+.budget-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.budget-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.budget-input-row label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #c2185b;
+}
+
+.budget-input-row input {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+/* Progress cards */
+.budget-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.budget-card {
+    background: #fce4ec;
+    border-radius: 16px;
+    padding: 14px 16px;
+    transition: transform 0.2s ease;
+}
+
+.budget-card:hover { transform: translateY(-2px); }
+
+.budget-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    color: #c2185b;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.budget-card-head .pct {
+    background: white;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: #333;
+}
+
+/* Progress bar */
+.budget-bar {
+    height: 10px;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.budget-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #10b981;
+    border-radius: 10px;
+    transition: width 0.4s ease, background 0.3s ease;
+}
+
+/* Info row */
+.budget-card-info {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #666;
+}
+
+.budget-card-info strong { color: #333; }
+
+/* Responsive tweak */
+@media (max-width: 480px) {
+    .budget-grid { grid-template-columns: 1fr; }
+    .budget-card-info { flex-direction: column; gap: 3px; }
+}
