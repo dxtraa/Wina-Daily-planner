@@ -78,40 +78,155 @@
             <p>Add your first task and start being productive today 💪</p>
         </div>
 
-        <!-- ==================== MONEY MANAGER ==================== -->
-        <section class="new-card">
-            <h2>💰 Money Manager</h2>
+   <!-- ==================== BUDGET PLANNER ==================== -->
+<section class="new-card">
+    <h2>💰 Budget Planner</h2>
 
-            <div class="money-summary">
-                <div class="money-box income">
-                    <span class="lbl">Income</span>
-                    <span class="val" id="totalIncome">$0.00</span>
-                </div>
-                <div class="money-box expense">
-                    <span class="lbl">Expenses</span>
-                    <span class="val" id="totalExpense">$0.00</span>
-                </div>
-                <div class="money-box balance">
-                    <span class="lbl">Balance</span>
-                    <span class="val" id="balance">$0.00</span>
-                </div>
+    <!-- Summary -->
+    <div class="money-summary">
+        <div class="money-box income">
+            <span class="lbl">Income</span>
+            <span class="val" id="totalIncome">$0.00</span>
+        </div>
+        <div class="money-box expense">
+            <span class="lbl">Expenses</span>
+            <span class="val" id="totalExpense">$0.00</span>
+        </div>
+        <div class="money-box balance">
+            <span class="lbl">Balance</span>
+            <span class="val" id="balance">$0.00</span>
+        </div>
+    </div>
+
+    <!-- Budget Setup -->
+    <h3 style="font-size:1.05rem;color:#c2185b;margin:16px 0 10px;">🎯 Atur Budget per Kategori</h3>
+    <div class="budget-grid">
+        <div class="budget-input-row">
+            <label>🎓 Kuliah</label>
+            <input type="number" id="budgetKuliah" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="budget-input-row">
+            <label>🍱 Makan</label>
+            <input type="number" id="budgetMakan" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="budget-input-row">
+            <label>🚨 Uang Darurat</label>
+            <input type="number" id="budgetDarurat" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="budget-input-row">
+            <label>💰 Nabung</label>
+            <input type="number" id="budgetNabung" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="budget-input-row">
+            <label>🎮 Jajan / Main</label>
+            <input type="number" id="budgetJajan" placeholder="0" min="0" step="0.01">
+        </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button id="saveBudgetBtn" style="flex:1;">
+            <i class="fas fa-save"></i> Simpan Budget
+        </button>
+        <button id="resetDataBtn" style="flex:1;background:linear-gradient(135deg,#9e9e9e,#616161);">
+            <i class="fas fa-redo"></i> Reset Data
+        </button>
+    </div>
+    <div class="status" id="budgetStatus"></div>
+
+    <!-- Progress per Kategori -->
+    <h3 style="font-size:1.05rem;color:#c2185b;margin:22px 0 10px;">📊 Progress Budget</h3>
+    <div class="budget-progress">
+
+        <div class="budget-card">
+            <div class="budget-card-head">
+                <span>🎓 Kuliah</span>
+                <span class="pct" id="percent_kuliah">0%</span>
             </div>
-
-            <div class="input-group-2">
-                <input type="text" id="moneyDesc" placeholder="Description">
-                <input type="number" id="moneyAmount" placeholder="Amount" min="0" step="0.01">
-                <select id="moneyType">
-                    <option value="income">Income</option>
-                    <option value="expense">Expense</option>
-                </select>
-                <button id="addMoneyBtn">
-                    <i class="fas fa-plus"></i> Add
-                </button>
+            <div class="budget-bar"><div class="budget-bar-fill" id="bar_kuliah"></div></div>
+            <div class="budget-card-info">
+                <span>Budget: <strong id="budgetVal_kuliah">$0.00</strong></span>
+                <span>Terpakai: <strong id="spentVal_kuliah">$0.00</strong></span>
+                <span>Sisa: <strong id="remainVal_kuliah">$0.00</strong></span>
             </div>
+        </div>
 
-            <ul id="moneyList"></ul>
-        </section>
+        <div class="budget-card">
+            <div class="budget-card-head">
+                <span>🍱 Makan</span>
+                <span class="pct" id="percent_makan">0%</span>
+            </div>
+            <div class="budget-bar"><div class="budget-bar-fill" id="bar_makan"></div></div>
+            <div class="budget-card-info">
+                <span>Budget: <strong id="budgetVal_makan">$0.00</strong></span>
+                <span>Terpakai: <strong id="spentVal_makan">$0.00</strong></span>
+                <span>Sisa: <strong id="remainVal_makan">$0.00</strong></span>
+            </div>
+        </div>
 
+        <div class="budget-card">
+            <div class="budget-card-head">
+                <span>🚨 Uang Darurat</span>
+                <span class="pct" id="percent_darurat">0%</span>
+            </div>
+            <div class="budget-bar"><div class="budget-bar-fill" id="bar_darurat"></div></div>
+            <div class="budget-card-info">
+                <span>Budget: <strong id="budgetVal_darurat">$0.00</strong></span>
+                <span>Terpakai: <strong id="spentVal_darurat">$0.00</strong></span>
+                <span>Sisa: <strong id="remainVal_darurat">$0.00</strong></span>
+            </div>
+        </div>
+
+        <div class="budget-card">
+            <div class="budget-card-head">
+                <span>💰 Nabung</span>
+                <span class="pct" id="percent_nabung">0%</span>
+            </div>
+            <div class="budget-bar"><div class="budget-bar-fill" id="bar_nabung"></div></div>
+            <div class="budget-card-info">
+                <span>Budget: <strong id="budgetVal_nabung">$0.00</strong></span>
+                <span>Terpakai: <strong id="spentVal_nabung">$0.00</strong></span>
+                <span>Sisa: <strong id="remainVal_nabung">$0.00</strong></span>
+            </div>
+        </div>
+
+        <div class="budget-card">
+            <div class="budget-card-head">
+                <span>🎮 Jajan / Main</span>
+                <span class="pct" id="percent_jajan">0%</span>
+            </div>
+            <div class="budget-bar"><div class="budget-bar-fill" id="bar_jajan"></div></div>
+            <div class="budget-card-info">
+                <span>Budget: <strong id="budgetVal_jajan">$0.00</strong></span>
+                <span>Terpakai: <strong id="spentVal_jajan">$0.00</strong></span>
+                <span>Sisa: <strong id="remainVal_jajan">$0.00</strong></span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Add Transaction -->
+    <h3 style="font-size:1.05rem;color:#c2185b;margin:22px 0 10px;">➕ Tambah Transaksi</h3>
+    <div class="input-group-2">
+        <input type="text" id="moneyDesc" placeholder="Keterangan">
+        <input type="number" id="moneyAmount" placeholder="Jumlah" min="0" step="0.01">
+        <select id="moneyType">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+        </select>
+        <select id="moneyCategory">
+            <option value="kuliah">🎓 Kuliah</option>
+            <option value="makan">🍱 Makan</option>
+            <option value="darurat">🚨 Uang Darurat</option>
+            <option value="nabung">💰 Nabung</option>
+            <option value="jajan">🎮 Jajan / Main</option>
+            <option value="other">📦 Lainnya</option>
+        </select>
+        <button id="addMoneyBtn">
+            <i class="fas fa-plus"></i> Add
+        </button>
+    </div>
+
+    <ul id="moneyList"></ul>
+</section>
         <!-- ==================== CLASS SCHEDULE ==================== -->
         <section class="new-card">
             <h2>🎓 Class Schedule</h2>
